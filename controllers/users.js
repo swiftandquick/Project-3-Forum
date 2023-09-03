@@ -30,7 +30,7 @@ module.exports.register = async(req, res, next) => {
 
 // Render login.ejs in users folder.  
 module.exports.renderLogin = (req, res) => {
-    res.render('users/Login');
+    res.render('users/login');
 }
 
 // If I successfully login, flash a success message and redirect to localhost:3000/threads or the session that I am currently in.  
