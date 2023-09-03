@@ -8,17 +8,20 @@
       <p class="card-text"><%= thread.content %></p>
     </div>
     <ul class="list-group list-group-flush">
+      <li class="list-group-item">Post by: <%= thread.author.username %></li>
       <li class="list-group-item">Post On: <%= thread.postTime %></li>
       <li class="list-group-item">
         Last edited on: <%= thread.lastEditTime %>
       </li>
     </ul>
+    <!-- If current user exists and current user is equal to the user that posted the thread, show the post and delete buttons.  -->
+    <!-- The link goes to the edit page.  -->
+    <!-- The form goes submit a DELETE requests on localhost:3000/threads/:id, which overrides POST request.  -->
+    <% if(currentUser && thread.author.equals(currentUser._id)) { %>
     <div class="card-body">
-      <!-- Go to the edit page.  -->
       <a class="card-link btn btn-warning" href="/threads/<%=thread._id%>/edit"
         >Edit</a
       >
-      <!-- The form goes submit a DELETE requests on localhost:3000/threads/:id, which overrides POST request.  -->
       <form
         class="d-inline"
         action="/threads/<%=thread._id%>?_method=DELETE"
@@ -27,8 +30,11 @@
         <button class="btn btn-danger">Delete</button>
       </form>
     </div>
+    <% } %>
     <hr />
     <!-- The form goes submit a POST requests on localhost:3000/threads/:id/replies, which overrides POST request.  -->
+    <!-- I can only see the form if there's a current user.  -->
+    <% if(currentUser) { %>
     <form
       class="mb-3 validated-form"
       action="/threads/<%=thread._id%>/replies"
@@ -49,6 +55,7 @@
       </div>
       <button class="btn btn-success">Submit</button>
     </form>
+    <% } %>
     <!-- Display the replies.  -->
     <% for (let reply of thread.replies) { %>
     <div class="card mb-3">
@@ -56,14 +63,17 @@
         <p class="card-text"><%= reply.replyContent %></p>
       </div>
       <ul class="list-group list-group-flush">
+        <li class="list-group-item">Post by: <%= reply.author.username %></li>
         <li class="list-group-item">Post On: <%= reply.replyPostTime %></li>
         <li class="list-group-item">
           Last edited on: <%= reply.replyLastEditTime %>
         </li>
       </ul>
+      <!-- Create a form to delete to reply for each reply.  
+      When the form is submitted, send a delete request to localhost:3000/threads/:id/replies/:replyId.  
+      Only show the delete button if there's a signed in user and the user is the same as the author.  -->
+      <% if(currentUser && reply.author.equals(currentUser._id)) { %>
       <div class="card-body">
-        <!-- Create a form to delete to reply for each reply.  
-        When the form is submitted, send a delete request to localhost:3000/threads/:id/replies/:replyId.  -->
         <form
           action="/threads/<%=thread._id%>/replies/<%=reply._id%>?_method=DELETE"
           method="POST"
@@ -71,6 +81,7 @@
           <button class="btn btn-sm btn-danger">Delete</button>
         </form>
       </div>
+      <% } %>
     </div>
     <% } %>
   </div>

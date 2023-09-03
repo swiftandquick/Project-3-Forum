@@ -11,6 +11,7 @@ const Schema = mongoose.Schema;
 // postTime as date, which indicates when the thread was made, 
 // lastEditTime as date, which indicates when the thread was last edited, 
 // lastThreadUpdate is also a date, which indicates the date of the last reply submitted, if there are no replies, lastThreadUpdate equals postTime, 
+// author is the User object, the user who created the thread, 
 // replies is an array of Reply objects.  
 const ThreadSchema = new Schema({
     title: String, 
@@ -18,6 +19,10 @@ const ThreadSchema = new Schema({
     postTime: Date, 
     lastEditTime: Date,
     lastThreadUpdate: Date, 
+    author: {
+        type: Schema.Types.ObjectId, 
+        ref: 'User'
+    },
     replies: [{type: Schema.Types.ObjectId, ref: 'Reply'}]
 });
 

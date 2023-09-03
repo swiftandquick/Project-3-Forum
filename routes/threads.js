@@ -7,97 +7,53 @@ const router = express.Router();
 const catchAsync = require('../utils/catchAsync');
 const ExpressError = require('../utils/ExpressError');
 
-// Require functions on schemas.js.  
-const { threadSchema } = require("../schemas.js");
+// Import the middleware function isLoggedIn to authenticate the users.  
+const { isLoggedIn, validateThread, isAuthor } = require("../middleware");
 
-// Require the models from models folder.  
-const Thread = require('../models/thread');
+// Require the controller functions from controllers folder.  
+const threads = require('../controllers/threads');
 
-// Middleware function to validate threadSchema.  
-const validateThread = (req, res, next) => {
-    const { error } = threadSchema.validate(req.body);
-    if(error) {
-        const msg = error.details.map(el => el.message).join(', ');
-        throw new ExpressError(msg, 400);
-    }
-    else {
-        next();
-    }
-}
-
+// GET route:  
 // If there's an error, catchAsync will catch the error and the use method will be invoked.  
 // Index page, localhost:3000/threads.  
-// Find all campgrounds and render them in index.ejs of threads folder, pass in threads array as argument.  
-// Sort the threads array by time from latest to earliest before passing threads into index.ejs.  
-router.get('/', catchAsync(async(req, res) => {
-    const threads = await Thread.find({});
-    threads.sort(function(a, b) {
-        return b.lastThreadUpdate.getTime() - a.lastThreadUpdate.getTime();
-    });
-    res.render('threads/index', {threads});
-}));
-
-// Create a thread, localhost:3000/threads/new.  
-// When creating a thread, render new.ejs of threads folder.  
-router.get('/new', (req, res) => {
-    res.render('threads/new');
-});
-
+// POST route:  
+// Use isLoggedIn to authenticate users, user can only perform this action when logged in.  
 // If there's an error, catchAsync will catch the error and the use method will be invoked.  
 // validateThread is a middleware function that validates the thread schema.  
 // When the form from localhost:3000/threads/new is submitted, this will post method be invoked.  
-// Set the postTime, lastEditTime, and lastThreadUpdate to current time, which is the time when the thread is submitted. 
-// Save the thread as the new object inside the threads table.  
-// Redirect to the newly created thread.  
-router.post('/', validateThread, catchAsync(async(req, res) => {
-    const thread = new Thread(req.body.thread);
-    thread.postTime = new Date();
-    thread.lastEditTime = new Date();
-    thread.lastThreadUpdate = new Date();
-    await thread.save();
-    res.redirect(`/threads/${thread._id}`);
-}));
+router.route('/')
+    .get(catchAsync(threads.index))
+    .post(isLoggedIn, validateThread, catchAsync(threads.createThread));
 
+// Use isLoggedIn to authenticate users, user can only perform this action when logged in.  
+// the /new route needs to be before the :id route, otherwise express thinks new is a ID.  
+// Create a thread, localhost:3000/threads/new.  
+router.get('/new', isLoggedIn, threads.renderNewForm);
+
+// GET route:
 // Individual thread, localhost:3000/threads/:id.  :id is the thread's ID.  
 // For example, the link can be http://localhost:3000/threads/64e3fc4984cd83ab455ca60c.  
-// Populate the replies array of objects so we can display the property replyContent for each reply object.  
-// Render a specific thread based on ID, on show.ejs of threads folder.  
-router.get('/:id', catchAsync(async(req, res) => {
-    const thread = await Thread.findById(req.params.id).populate('replies');
-    res.render('threads/show', { thread });
-}));
-
-// If there's an error, catchAsync will catch the error and the use method will be invoked.  
-// Edit the thread, localhost:3000/threads/:id/edit.  :id is the thread's ID.  
-// Find the thread by the ID.  
-// Pass the thread object into edit.ejs of threads folder.  
-router.get('/:id/edit', catchAsync(async(req, res) => {
-    const thread = await Thread.findById(req.params.id);
-    res.render('threads/edit', { thread });
-}));
-
+// PUT route:  
+// Use isLoggedIn to authenticate users, user can only perform this action when logged in.  
+// Use isAuthor to authorize users, only user that posted the content can perform this action.  
 // If there's an error, catchAsync will catch the error and the use method will be invoked.  
 // validateThread is a middleware function that validates the thread schema.  
 // When the edit form is submitted on localhost:3000/threads/:id/edit, this PUT method is invoked.  
-// Set the thread's lastEditTime to now.  
-// After the edit thread form is submitted, redirect to localhost:3000/threads/:id.  
-router.put('/:id', validateThread, catchAsync(async(req, res) => {
-    const { id } = req.params;
-    const thread = await Thread.findByIdAndUpdate(id, {...req.body.thread});
-    thread.lastEditTime = new Date();
-    await thread.save();
-    res.redirect(`/threads/${thread._id}`);
-}));
-
+// DELETE route:  
+// Use isLoggedIn to authenticate users, user can only perform this action when logged in.  
+// Use isAuthor to authorize users, only user that posted the content can perform this action.  
 // If there's an error, catchAsync will catch the error and the use method will be invoked.  
 // When the delete form is submitted on localhost:3000/threads/:id, this DELETE method is invoked.  
-// Delete the thread from the database.  
-// Redirect to localhost:3000/threads after deletion.  
-router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
-    await Thread.findByIdAndDelete(id);
-    res.redirect('/threads');
-});
+router.route('/:id')
+    .get(catchAsync(threads.showThread))
+    .put(isLoggedIn, isAuthor, validateThread, catchAsync(threads.updateThread))
+    .delete(isLoggedIn, isAuthor, threads.deleteThread);
+
+// Use isLoggedIn to authenticate users, user can only perform this action when logged in.  
+// Use isAuthor to authorize users, only user that posted the content can perform this action.  
+// If there's an error, catchAsync will catch the error and the use method will be invoked.  
+// Edit the thread, localhost:3000/threads/:id/edit.  :id is the thread's ID.  
+router.get('/:id/edit', isLoggedIn, isAuthor, catchAsync(threads.renderEditForm));
 
 // Export the router.  
 module.exports = router;

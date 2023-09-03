@@ -1,3 +1,8 @@
+// If I am not in production mode, require dotenv and config the file.  
+if (process.env.NODE_ENV !== "production") {
+    require('dotenv').config();
+}
+
 // Require packages.  
 const express = require('express');
 const app = express();
@@ -6,17 +11,36 @@ const path = require('path');
 const mongoose = require('mongoose');
 
 const ejsMate = require('ejs-mate');
+const session = require('express-session');
+const flash = require('connect-flash');
 const methodOverride = require('method-override');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet')
 
 // Require files in utils folder.  
 const ExpressError = require('./utils/ExpressError');
 
+// Require the model exported from module in user.js.  
+const User = require('./models/user');
+
 // Require the routes from the routes folder.  
-const threads = require('./routes/threads');
-const replies = require('./routes/replies');
+const threadRoutes = require('./routes/threads');
+const replyRoutes = require('./routes/replies');
+const userRoutes = require('./routes/users');
+
+// Require connect-mongo package. 
+const MongoStore = require("connect-mongo");
+
+// Local database.  
+// const dbUrl = 'mongodb://127.0.0.1:27017/coding-gurus';
+
+// Connect to MongoDB Atlas database.  
+const dbUrl = process.env.DB_URL;
 
 // Connect to the database coding-gurus.  
-mongoose.connect('mongodb://127.0.0.1:27017/coding-gurus', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log("Connection open!");
     })
@@ -43,11 +67,114 @@ app.use(express.urlencoded({ extended: true }));
 // The query string for overriding methods is "_method".  
 app.use(methodOverride('_method'));
 
-// All addresses that begin with localhost:3000/threads will use the threads route.  
-app.use('/threads', threads);
+// Use mongoSanitize to sanitize user-supplied data to prevent MongoDB Operator Injection.  
+// $ is replaced by _, so I can't inject data into MongoDB.  
+app.use(mongoSanitize({replaceWith: '_'}));
 
-// All addresses that begin with localhost:3000/threads/:id/replies will use the replies route.  
-app.use('/threads/:id/replies', replies)
+// Use the create method to create the store.  
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    touchAfter: 24 * 60 * 60,
+    crypto: {
+        secret: 'thisshouldbeabettersecret!'
+    }
+});
+
+// Create a sessionConfig object.  Each session has a cookie that stores the session ID.  
+// Each session expires in a week.  
+const sessionConfig = {
+    store, 
+    name: 'session',
+    secret: 'thisshouldbeabettersecret!',
+    resave: false, 
+    saveUnitialized: true, 
+    cookie: {
+        httpOnly: true, 
+        // secure: true, 
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7, 
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}
+
+// Use express-session as session middleware, provide sessionConfig as argument.  
+app.use(session(sessionConfig));
+
+// Use connect-flash as a middleware to display messages after a certain action is done.  
+app.use(flash());
+
+// Enable all middleware that helmet came with.  
+app.use(helmet());
+
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net",
+];
+
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+];
+
+const connectSrcUrls = [
+];
+
+const fontSrcUrls = [];
+
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://images.unsplash.com/",
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
+
+// Initialize the passport.   
+app.use(passport.initialize());
+
+// We need the passport.session() middleware if we want persistent login sessions.  Use this middleware after the session middleware.  
+app.use(passport.session());
+
+// Use static authenticate method of model in LocalStrategy (User).  
+passport.use(new LocalStrategy(User.authenticate()));
+
+// Serialize users into the session.  Store the user in the session.  
+passport.serializeUser(User.serializeUser());
+
+// Deserialize users out of the session.  Un-store the user out of the session.  
+passport.deserializeUser(User.deserializeUser());
+
+// Use connect-flash as a middleware.  
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
+
+// All addresses that begin with localhost:3000 will use the userRoutes route.  
+app.use('/', userRoutes);
+
+// All addresses that begin with localhost:3000/threads will use the threadRoutes route.  
+app.use('/threads', threadRoutes);
+
+// All addresses that begin with localhost:3000/threads/:id/replies will use the replyRoutes route.  
+app.use('/threads/:id/replies', replyRoutes)
 
 // Home page, localhost:3000.  
 // Render the home.ejs view when I a on the main page.  

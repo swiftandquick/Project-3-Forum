@@ -4,8 +4,55 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coding Gurus</title>
+    <!-- Newest version.  -->
+    <link href="/stylesheets/bootstrap/bootstrap1.css" rel="stylesheet" />
+    <!-- Old version.  -->
+    <link href="/stylesheets/bootstrap/bootstrap2.css" rel="stylesheet" />
+    <!-- Add in selfmade styles.  -->
+    <link rel="stylesheet" href="/stylesheets/selfmade/home.css" />
   </head>
-  <body>
-    <h1>Welcome to the Coding Gurus forum!</h1>
+  <body class="d-flex text-center text-white bg-dark">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+      <header class="mb-auto">
+        <div>
+          <h3 class="float-md-left mb-0">Coding Gurus</h3>
+          <nav class="nav nav-masthead justify-content-center float-md-right">
+            <a class="nav-link active" aria-current="page" href="#">Home</a>
+            <a class="nav-link" href="/threads">Index</a>
+            <!-- If there’s a user logged in, display logout anchor tag, otherwise, display login and register anchor tags.  -->
+            <% if(!currentUser) { %>
+            <a class="nav-link" href="/login">Login</a>
+            <a class="nav-link" href="/register">Register</a>
+            <% } else { %>
+            <a class="nav-link" href="/logout">Logout</a>
+            <% } %>
+          </nav>
+        </div>
+      </header>
+      <main class="px-3">
+        <h1>Coding Gurus</h1>
+        <p class="lead">
+          Welcome to Coding Gurus! <br />
+          Please join our forums and share your experience with us together.
+          <br />
+        </p>
+        <a
+          href="/threads"
+          class="btn btn-lg btn-secondary font-weight-bold border-white bg-info"
+          >View Threads</a
+        >
+      </main>
+
+      <footer class="mt-auto text-white-50">
+        <p>&copy; 2023</p>
+      </footer>
+    </div>
+    <!-- Newest version.  -->
+    <script src="/stylesheets/bootstrap/bootstrap1.js"></script>
+    <script src="/stylesheets/bootstrap/bootstrap2.js"></script>
+    <script src="/stylesheets/bootstrap/bootstrap3.js"></script>
+    <!-- Old version.  -->
+    <script src="/stylesheets/bootstrap/bootstrap4.js"></script>
+    <script src="/stylesheets/bootstrap/bootstrap5.js"></script>
   </body>
 </html>

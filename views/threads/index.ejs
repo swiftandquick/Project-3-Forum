@@ -19,6 +19,11 @@
             else { %> <%= thread.content.substring(0, 100) + "..." %> <% } %>
           </p>
           <p class="card-text">
+            <small class="text-muted"
+              >Posted by: <%=thread.author.username%></small
+            >
+          </p>
+          <p class="card-text">
             <small class="text-muted">Posted on: <%=thread.postTime%></small>
           </p>
           <p class="card-text">
