@@ -199,7 +199,10 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error', { err });
 });
 
-// The local app will be listened on port 3000.  The address on the server should be http://localhost:3000/.  
-app.listen(3000, () => {
-    console.log("Serving on port 3000...");
+// Set port equals PORT from .env file, if PORT doesn't exist, set port to 3000.  
+const port = process.env.PORT || 3000;
+
+// Listen on the port.  
+app.listen(port, () => {
+    console.log(`Serving on port ${port}.`);
 });
