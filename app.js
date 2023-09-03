@@ -33,11 +33,8 @@ const userRoutes = require('./routes/users');
 // Require connect-mongo package. 
 const MongoStore = require("connect-mongo");
 
-// Local database.  
-// const dbUrl = 'mongodb://127.0.0.1:27017/coding-gurus';
-
-// Connect to MongoDB Atlas database.  
-const dbUrl = process.env.DB_URL;
+// Connect to MongoDB Atlas database.  If I can't access to .env file, use local database.  
+const dbUrl = process.env.DB_URL || 'mongodb://127.0.0.1:27017/coding-gurus';
 
 // Connect to the database coding-gurus.  
 mongoose.connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -71,12 +68,15 @@ app.use(methodOverride('_method'));
 // $ is replaced by _, so I can't inject data into MongoDB.  
 app.use(mongoSanitize({replaceWith: '_'}));
 
+// If process.env is accessible, I will use the SECRET variable, otherwise, set secret to the default value.  
+const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
+
 // Use the create method to create the store.  
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 60 * 60,
     crypto: {
-        secret: 'thisshouldbeabettersecret!'
+        secret
     }
 });
 
@@ -85,7 +85,7 @@ const store = MongoStore.create({
 const sessionConfig = {
     store, 
     name: 'session',
-    secret: 'thisshouldbeabettersecret!',
+    secret,
     resave: false, 
     saveUnitialized: true, 
     cookie: {
