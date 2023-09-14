@@ -1,4 +1,3 @@
-<!-- boilerplate.ejs set up the general layout for this ejs file. -->
 <% layout('layouts/boilerplate')%>
 <h1>Login</h1>
 <div class="container d-flex justify-content-center align-items-center mt-5">
@@ -12,7 +11,6 @@
         />
         <div class="card-body">
           <h5 class="card-title">Login</h5>
-          <!-- Submit the form will send a POST request to localhost:3000/login.  -->
           <form action="/login" method="POST" class="validated-form" novalidate>
             <div class="mb-3">
               <label class="form-label" for="username">Username</label>
@@ -26,7 +24,6 @@
               />
               <div class="valid-feedback">Looks good!</div>
             </div>
-
             <div class="mb-3">
               <label class="form-label" for="password">Password</label>
               <input
