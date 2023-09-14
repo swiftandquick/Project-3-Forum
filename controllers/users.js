@@ -1,14 +1,9 @@
-// Require the user model from models folder.  
 const User = require('../models/user');
 
-// Render register.ejs in users folder.  
 module.exports.renderRegister = (req, res) => {
     res.render('users/register')
 }
 
-// Create a new user object base on the information submitted from the form.  
-// If I successfully create a user, log the user in, redirect to localhost:3000/threads and flash a success message.  
-// If I failed to create a user, such as due to duplicated username, redirect to localhost:3000/register and flash an error message.   
 module.exports.register = async(req, res, next) => {
     try {
         const {email, username, password} = req.body;
@@ -28,20 +23,16 @@ module.exports.register = async(req, res, next) => {
     }
 }
 
-// Render login.ejs in users folder.  
 module.exports.renderLogin = (req, res) => {
     res.render('users/login');
 }
 
-// If I successfully login, flash a success message and redirect to localhost:3000/threads or the session that I am currently in.  
 module.exports.login = (req, res) => {
     req.flash('success', 'Welcome back!');
     const redirectUrl = res.locals.returnTo || '/threads';
     res.redirect(redirectUrl);
 }
 
-// Logs the user out.  
-// Redirect to localhost:3000/threads.  
 module.exports.logout = (req, res, next) => {
     req.logout(function (err) {
         if (err) {
