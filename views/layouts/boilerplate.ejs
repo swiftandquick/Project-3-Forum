@@ -10,14 +10,10 @@
     <link href="/stylesheets/bootstrap/bootstrap2.css" rel="stylesheet" />
   </head>
   <body class="d-flex flex-column vh-100">
-    <!-- Display the navbar in boilerplate.ejs.  -->
     <%- include('../partials/navbar') %>
-    <!-- The line below contains the content of each .ejs layout files.  -->
-    <!-- Display the flash message.  -->
     <main class="container mt-5">
       <%- include('../partials/flash') %> <%- body %>
     </main>
-    <!-- Display the footer in boilerplate.ejs.  -->
     <%- include('../partials/footer') %>
 
     <!-- Newest version.  -->
@@ -28,7 +24,6 @@
     <script src="/stylesheets/bootstrap/bootstrap4.js"></script>
     <script src="/stylesheets/bootstrap/bootstrap5.js"></script>
 
-    <!-- Use to validate forms.  -->
     <script src="/scripts/validateForms.js"></script>
   </body>
 </html>
